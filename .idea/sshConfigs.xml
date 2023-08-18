@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="localhost" id="ba2fa95a-5021-4ec6-bef5-443517788eae" port="22" customName="simpletrack" nameFormat="CUSTOM" useOpenSSHConfig="true">
+        <option name="customName" value="simpletrack" />
+      </sshConfig>
+    </configs>
+  </component>
+</project>

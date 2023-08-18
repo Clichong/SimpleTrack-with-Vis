@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="912b14db-3523-4892-a784-6e044ee649aa" name="simpletrack">
+        <fileTransfer rootFolder="/home/lab/LLC" accessType="SFTP" host="127.0.0.1" port="33068" sshConfigId="08257e3d-1bdc-47f6-bff4-99d4dabc6d6c" sshConfig="lab@127.0.0.1:33068">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
