@@ -10,7 +10,8 @@ from pyquaternion import Quaternion
 from nuscenes.utils.data_classes import Box
 import pickle
 
-from mot_3d.utils import SequenceData
+from collections import deque
+from mot_3d.utils.data_store import SequenceDatabase, SeqData
 from mot_3d.visualization import seq_frame_visualization, VisualizerSequence
 
 
@@ -32,7 +33,7 @@ args = parser.parse_args()
 
 def nu_array2mot_bbox(b):
     """
-    格式的转化作用
+        格式的转化作用: b: translation + size + rotation (10, )
     """
     nu_box = Box(b[:3], b[3:6], Quaternion(b[6:10]))
     mot_bbox = BBox(
@@ -106,12 +107,12 @@ def frame_visualization(bboxes, ids, states, gt_bboxes=None, gt_ids=None, pc=Non
 
 
 def sequence_mot(configs, data_loader, obj_type, sequence_id, gt_bboxes=None, gt_ids=None,
-                 visualize=False, visualize_seq=True):
+                 visualize=False, visualize_seq=True, show_3d=True):
     tracker = MOTModel(configs)
     frame_num = len(data_loader)
     IDs, bboxes, states, types = list(), list(), list(), list()
 
-    seq_database = SequenceData(space_num=5)
+    seq_database = deque()
     visualizer = VisualizerSequence(figsize=(12, 12))
 
     # process frame from cur_frame to frame_num
@@ -121,6 +122,8 @@ def sequence_mot(configs, data_loader, obj_type, sequence_id, gt_bboxes=None, gt
         
         # input data
         frame_data = next(data_loader)
+        calib_data, ego_data, ori_pc = frame_data['calib_data'], frame_data['ego_data'], frame_data['sen_pc']
+
         frame_data = FrameData(dets=frame_data['dets'], ego=frame_data['ego'], pc=frame_data['pc'], 
             det_types=frame_data['det_types'], aux_info=frame_data['aux_info'], time_stamp=frame_data['time_stamp'])
 
@@ -137,15 +140,17 @@ def sequence_mot(configs, data_loader, obj_type, sequence_id, gt_bboxes=None, gt
                 gt_bboxes[frame_index], gt_ids[frame_index], frame_data.pc, dets=frame_data.dets, name='{:}_{:}'.format(args.name, frame_index))
 
         if visualize_seq:
-            seq_data = {'track_boxes': result_pred_bboxes,
-                        'track_ids': result_pred_ids,
-                        'track_stat': result_pred_states,
-                        'gt': gt_bboxes[frame_index],
-                        'frame_data': frame_data
-            }
-            seq_database.append(seq_data)
-            if len(seq_database) == 3:
-                visualizer.show3d(seq_database)
+            num_frame =
+            seq_data = SeqData(track_boxes=result_pred_bboxes, track_ids=result_pred_ids, track_stat=result_pred_states,
+                               gt=gt_bboxes[frame_index], pc=ori_pc, frame_data=frame_data)
+            visualizer.show2d([seq_data])
+
+            if show_3d:
+                seq_data.trans_world_to_pc(calib_data=calib_data, ego_data=ego_data)
+
+            seq_database.appendleft(seq_data)
+            if len(seq_database) == 1:
+                visualizer.show3d(seq_database) if show_3d else visualizer.show2d(seq_database)
                 seq_database.pop()
 
         # wrap for output

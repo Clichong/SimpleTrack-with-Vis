@@ -78,13 +78,14 @@ class NuScenesLoader:
         if self.cur_frame >= self.max_frame:
             raise StopIteration
 
-        result = dict()
+        result = dict()         # 存储全局坐标系的点云和检测数据
 
         # 获取对应帧的ego信息
         result['time_stamp'] = self.ts_info[self.cur_frame] * 1e-6
         ego = self.ego_info[str(self.cur_frame)]
         ego_matrix = transform_matrix(ego[:3], ego[3:])
         result['ego'] = ego_matrix
+        result['ego_data'] = ego
 
         # 获取当前帧的pred box, pred class, pred velos, ego info, time stamp，其中前3个信息需要根据所需类别来筛选
         bboxes = self.dets['bboxes'][self.cur_frame]
@@ -108,9 +109,12 @@ class NuScenesLoader:
         result['pc'] = None
         if self.use_pc:
             pc = self.pcs[str(self.cur_frame)][:, :3]   # (k, 3)
+            result['sen_pc'] = pc
 
             # 1) 根据传感器参数将传感器坐标系转到到自车坐标系
             calib = self.calib_info[str(self.cur_frame)]
+            result['calib_data'] = calib
+
             calib_trans, calib_rot = np.asarray(calib[:3]), Quaternion(np.asarray(calib[3:]))
             pc = np.dot(pc, calib_rot.rotation_matrix.T)
             pc += calib_trans

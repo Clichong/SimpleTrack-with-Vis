@@ -7,17 +7,17 @@ import pdb, json
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--raw_data_folder', type=str, default='../../../raw/nuscenes/data/sets/nuscenes/')
-parser.add_argument('--data_folder', type=str, default='../../../datasets/nuscenes/')
+parser.add_argument('--raw_data_folder', type=str, default='../../data/nuscene_data/v1.0-mini/')
+parser.add_argument('--data_folder', type=str, default='../../data/data_dir_2hz/')
 parser.add_argument('--mode', type=str, default='2hz', choices=['20hz', '2hz'])
 args = parser.parse_args()
 
 
 def instance_info2bbox_array(info):
-    translation = info.center.tolist()
-    size = info.wlh.tolist()
-    rotation = info.orientation.q.tolist()
-    return translation + size + rotation
+    translation = info.center.tolist()      # (3, )
+    size = info.wlh.tolist()                # (3, )
+    rotation = info.orientation.q.tolist()  # (4, )
+    return translation + size + rotation    # (10, )
 
 
 def main(nusc, scene_names, root_path, gt_folder):
