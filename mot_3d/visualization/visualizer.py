@@ -157,9 +157,11 @@ class VisualizerSequence:
         # azimuth:  沿y轴旋转
         # roll: 沿z轴旋转
         # mlab.view(azimuth=-179, elevation=54.0, distance=104.0, roll=90.0)
-        mlab.view(azimuth=-179, elevation=-54.0, distance=120.0, roll=-90.0, figure=fig)
+        mlab.view(azimuth=-179, elevation=-54.0, distance=240.0, roll=-90.0, figure=fig)
 
         mlab.show()
+        # mlab.savefig(figure=fig, filename='pc_01.jpg')
+
         # mlab.close()
         return fig
 

@@ -140,7 +140,6 @@ def sequence_mot(configs, data_loader, obj_type, sequence_id, gt_bboxes=None, gt
                 gt_bboxes[frame_index], gt_ids[frame_index], frame_data.pc, dets=frame_data.dets, name='{:}_{:}'.format(args.name, frame_index))
 
         if visualize_seq:
-            num_frame =
             seq_data = SeqData(track_boxes=result_pred_bboxes, track_ids=result_pred_ids, track_stat=result_pred_states,
                                gt=gt_bboxes[frame_index], pc=ori_pc, frame_data=frame_data)
             visualizer.show2d([seq_data])

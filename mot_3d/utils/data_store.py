@@ -62,6 +62,7 @@ class SeqData:
 
     def trans_world_to_pc(self, calib_data, ego_data):
         # mot to ndarray: [xyz, lwh, heading, score]
+        # 可以使用类方法： Bbox.bbox2array
         gt = [np.array([bbox.x, bbox.y, bbox.z, bbox.l, bbox.w, bbox.h, bbox.o])
                    for bbox in self.gt]
         track_boxes = [np.array([bbox.x, bbox.y, bbox.z, bbox.l, bbox.w, bbox.h, bbox.o, bbox.s])
