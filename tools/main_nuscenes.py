@@ -15,21 +15,26 @@ from mot_3d.utils.data_store import SequenceDatabase, SeqData
 from mot_3d.visualization import seq_frame_visualization, VisualizerSequence
 
 
-parser = argparse.ArgumentParser()
-# running configurations
-parser.add_argument('--name', type=str, default='SimpleTrack2Hz')
-parser.add_argument('--det_name', type=str, default='swim')
-parser.add_argument('--process', type=int, default=1)
-parser.add_argument('--visualize', action='store_true', default=False)
-parser.add_argument('--start_frame', type=int, default=0, help='start at a middle frame for debug')
-parser.add_argument('--obj_types', default='car,bus,trailer,truck,pedestrian,bicycle,motorcycle')
-# paths
-parser.add_argument('--config_path', type=str, default='../configs/nu_configs/giou.yaml',
-                    help='config file path, follow the path in the documentation')
-parser.add_argument('--result_folder', type=str, default='../output/')
-parser.add_argument('--data_folder', type=str, default='../data/data_dir_2hz/')
-args = parser.parse_args()
+def get_args():
+    parser = argparse.ArgumentParser()
+    # running configurations
+    parser.add_argument('--name', type=str, default='SimpleTrack2Hz')
+    parser.add_argument('--det_name', type=str, default='swim')
+    parser.add_argument('--process', type=int, default=1)
+    parser.add_argument('--visualize', action='store_true', default=False)
+    parser.add_argument('--show_seq', action='store_true')
+    parser.add_argument('--show_3d', action='store_true')
+    parser.add_argument('--show_frame_nums', type=int, default=2, help='show k nums frame datas')
+    parser.add_argument('--start_frame', type=int, default=0, help='start at a middle frame for debug')
+    parser.add_argument('--obj_types', default='car,bus,trailer,truck,pedestrian,bicycle,motorcycle')
+    # paths
+    parser.add_argument('--config_path', type=str, default='../configs/nu_configs/giou.yaml',
+                        help='config file path, follow the path in the documentation')
+    parser.add_argument('--result_folder', type=str, default='../output/')
+    parser.add_argument('--data_folder', type=str, default='../data/data_dir_2hz/')
+    args = parser.parse_args()
 
+    return args
 
 def nu_array2mot_bbox(b):
     """
@@ -142,13 +147,13 @@ def sequence_mot(configs, data_loader, obj_type, sequence_id, gt_bboxes=None, gt
         if visualize_seq:
             seq_data = SeqData(track_boxes=result_pred_bboxes, track_ids=result_pred_ids, track_stat=result_pred_states,
                                gt=gt_bboxes[frame_index], pc=ori_pc, frame_data=frame_data)
-            visualizer.show2d([seq_data])
+            # visualizer.show2d([seq_data])
 
             if show_3d:
                 seq_data.trans_world_to_pc(calib_data=calib_data, ego_data=ego_data)
 
             seq_database.appendleft(seq_data)
-            if len(seq_database) == 1:
+            if len(seq_database) == args.show_frame_nums:
                 visualizer.show3d(seq_database) if show_3d else visualizer.show2d(seq_database)
                 seq_database.pop()
 
@@ -162,7 +167,8 @@ def sequence_mot(configs, data_loader, obj_type, sequence_id, gt_bboxes=None, gt
     return IDs, bboxes, states, types
 
 
-def main(name, obj_types, config_path, data_folder, det_data_folder, result_folder, start_frame=0, token=0, process=1):
+def main(name, obj_types, config_path, data_folder, det_data_folder, result_folder,
+         start_frame=0, token=0, process=1, args=None):
     for obj_type in obj_types:
         summary_folder = os.path.join(result_folder, 'summary', obj_type)
 
@@ -186,9 +192,10 @@ def main(name, obj_types, config_path, data_folder, det_data_folder, result_fold
             gt_bboxes, gt_ids = load_gt_bboxes(data_folder, [obj_type], segment_name)
 
             # get every frame data in a scene to tracking and visualization
-            ids, bboxes, states, types = sequence_mot(configs, data_loader, obj_type, file_index, gt_bboxes, gt_ids, args.visualize)
+            ids, bboxes, states, types = sequence_mot(configs, data_loader, obj_type, file_index, gt_bboxes, gt_ids,
+                                                      visualize=args.visualize, visualize_seq=args.show_seq,
+                                                      show_3d=args.show_3d)
 
-            #
             frame_num = len(ids)
             for frame_index in range(frame_num):
                 id_num = len(ids[frame_index])
@@ -205,6 +212,9 @@ def main(name, obj_types, config_path, data_folder, det_data_folder, result_fold
 
 
 if __name__ == '__main__':
+
+    args = get_args()
+
     result_folder = os.path.join(args.result_folder, args.name)
     os.makedirs(result_folder, exist_ok=True)
     summary_folder = os.path.join(result_folder, 'summary')
@@ -222,9 +232,9 @@ if __name__ == '__main__':
         pool = multiprocessing.Pool(args.process)
         for token in range(args.process):
             result = pool.apply_async(main, args=(args.name, obj_types, args.config_path, args.data_folder, det_data_folder, 
-                result_folder, 0, token, args.process))
+                result_folder, 0, token, args.process, args))
         pool.close()
         pool.join()
     else:
         main(args.name, obj_types, args.config_path, args.data_folder, det_data_folder, 
-            result_folder, args.start_frame, 0, 1)
+            result_folder, args.start_frame, 0, 1, args)
